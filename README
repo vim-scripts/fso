@@ -1,0 +1,7 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3555
+
+This script enable to rename file of which your cursor is passing over the name in a buffer.
+It is compatible with NERDTree buffer and works with current buffer.
+
+
+Just type :REN when cursor passing over a filename in a buffer
