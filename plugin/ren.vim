@@ -1,9 +1,11 @@
 " Rename Automation
 "=============================================================================
+
 " Function to rename file in buffer, under cursor (in NERDTree)  {{{1
 function! Rename()
 
 	let fileToRename=""
+	let pathOfFileToRename=""
 	" 0 NerdTree, 
 	" 1 filename under cursor in current directory
 	" 2 filename of opened buffer
@@ -33,6 +35,10 @@ function! Rename()
 				let repIntermediaire=substitute(repIntermediaire,'\s', '', "g") 
 			endif
 		endwhile
+
+		mark a
+		norm Pcd
+		let pathOfFileToRename=getcwd()."/".repIntermediaire
 		" End of Specific NERDTree buffer case }}}2
 "=============================================================================
 	else
@@ -42,6 +48,7 @@ function! Rename()
 			echo "file under cursor ".filereadable(getcwd()."/".expand("<cword>"))
 			let case=1
 			let fileToRename=expand("<cword>")
+			let pathOfFileToRename=getcwd()
 		" End of Under cursor }}}2
 "=============================================================================
 		else
@@ -51,6 +58,7 @@ function! Rename()
 				let case=2
 				exe "cd ".expand("%:p:h")
 				let fileToRename=expand("%:p:t")
+				let pathOfFileToRename=getcwd()
 			else
 				" echo "none of file under cursor or opened under this buffer exist"
 			endif
@@ -63,28 +71,28 @@ function! Rename()
 	let newFileName=inputdialog("Rename this file to : ".fileToRename."\n", fileToRename)
 	if newFileName != ""
 
-		" NERD
-		if case==0
-			mark a
-			norm Pcd
-			let cmdarg=substitute(getcwd()."/".repIntermediaire.fileToRename,'\/', '\\', "g") 
+		if has("win32")
+			let cmdarg=pathOfFileToRename."/".fileToRename."@@@@".newFileName
+			let cmdarg=substitute(cmdarg,'\/', '\\', "g") 
+			let cmdarg=substitute(cmdarg,'\\\\', '\\', "g") 
+			let cmdarg='rename@@@@'.cmdarg
 		else
-			if case==1 || case==2
-				let cmdarg=substitute(getcwd()."/".fileToRename,'\/', '\\', "g") 
-			endif
+			let cmdarg=pathOfFileToRename."/".fileToRename."@@@@".pathOfFileToRename."/".newFileName
+			let cmdarg=substitute(cmdarg,'\\', '\/', "g") 
+			let cmdarg=substitute(cmdarg,'\/\/', '\/', "g") 
+			let cmdarg='mv@@@@-f@@@@'.cmdarg
 		endif
 
-		"
-		let cmdarg=substitute(cmdarg,'\\\\', '\\', "g") 
 		let cmdarg=substitute(cmdarg,'\s', '', "g") 
-		let cmdarg.=' '.newFileName
+		let cmdarg=substitute(cmdarg,'@@@@', ' ', "g") 
 		echo cmdarg
-		call system("rename ".cmdarg)
+		call system(cmdarg)
 
 		if case==0
 			norm 'a
 			norm pR
 		endif
+
 	endif
 	" End of Asking user to rename the file to }}}2
 "=============================================================================
@@ -92,4 +100,3 @@ endfunction
 "}}}1
 "=============================================================================
 command! -nargs=0 -complete=file REN call Rename()  
-
