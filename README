@@ -1,7 +1,16 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=3555
 
-This script enable to rename file of which your cursor is passing over the name in a buffer.
-It is compatible with NERDTree buffer and works with current buffer.
+Enable vim user to rename (or delete) file when cursor pass 
+over its filename/filepath.
+
+o Usage
+
+	Just type :REN or :DEL to rename or delete file under cursor       
 
 
-Just type :REN when cursor passing over a filename in a buffer
+o Filenames/Filepaths recognition
+
+  0.	Check that filename under cursor exists and is in an opened NERDTree buffer
+  1.	Check that filename under cursor is in the current directory
+  2.	Check that the filepath under cursor exists
+  3.	Check that file opened in the current buffer exists
