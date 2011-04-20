@@ -7,12 +7,12 @@
 "
 " Website: http://lemachupicchu.fr
 "
-" Features:
-"
-" Enable vim user to rename (or delete) file when cursor pass 
+" Main Feature: Enable vim user to rename (or delete) file when cursor pass 
 " over its filename/filepath.
 "
-" o Filenames/Filepaths recognition
+" Usage: Just type :REN or :DEL to do some action onfile under cursor
+"
+" Recognition priority :
 "
 "   0.	Check that filename under cursor exists and is in an opened NERDTree buffer
 "   1.	Check that filename under cursor is in the current directory
@@ -25,16 +25,58 @@
 " version 1.1 Compatibility win32 and unix OS
 " version 1.2 Add new rename feature when cursor is over filepath
 "             Add Delete feature
+" version 1.3 Add Dictionaries to store commands
+"             Enable delete files in NERDTree that have spaces inside filename
 " 
-" Last date revision : 19/04/2011
+" Last date revision : 20/04/2011
 "
 " }}}1
 "=============================================================================
-" Function to rename file in buffer, under cursor (in NERDTree)  {{{1
-function! SysIOAction(action)
+" Dictionaries of commands depending on OS {{{1
+"
+let s:dwin    = { 'REN': {'cmd': 'rename', 'parA':'tofeed', 'parB':'tofeed'}, 
+			    \ 'DEL': {'cmd': 'del /F', 'parA':'tofeed', 'parB':''} 
+				\ }
 
-	let fileToAlter=""
-	let pathOffileToAlter=""
+let s:dunix   = { 'REN': {'cmd': 'mv -f' , 'parA':'tofeed', 'parB':'tofeed'}, 
+                \ 'DEL': {'cmd': 'rm -rf', 'parA':'tofeed', 'parB':''}
+				\ }
+
+
+" List of patterns to substitute depending on OS
+let s:lpatwin   = [ ['\/','\\'], ['\\\\','\\'], ['\\','\'] ] 
+let s:lpatunix  = [ ['\\','\/'], ['\/\/','\/'] ] 
+
+"}}}1
+"=============================================================================
+" Function to init Dicts and Lists {{{1
+function! s:InitDicts()
+
+	let s:cmdDic  = {}
+
+	if !empty(s:cmdDic)
+		echo "dict not empty"
+	endif
+
+	let s:patList = []
+
+	let s:cmdDic =deepcopy(s:dunix)
+	let s:patList=deepcopy(s:lpatunix)
+
+	if has("win32")
+		let s:cmdDic=deepcopy(s:dwin)
+		let s:patList=deepcopy(s:lpatwin)
+	endif
+endfunc
+" }}}1
+"=============================================================================
+" Function to rename file under cursor (in NERDTree)  {{{1
+function! s:SysIOAction(action)
+
+    call s:InitDicts() 
+
+	let l:fileToAlter=""
+	let l:pathOffileToAlter=""
 
 	" 
 	" Order of checkup to rename
@@ -46,13 +88,9 @@ function! SysIOAction(action)
 "=============================================================================
 		" Assign command  {{{2
 		"
-		let winCmd="rename@@@@"
-		let unixCmd="mv@@@@-f@@@@"
 		let actionTitle="Rename this file to \n"
 
 		if a:action=="DEL"
-			let winCmd="del@@@@/F@@@@"
-			let unixCmd="rm@@@@-rf@@@@"
 			let actionTitle="Delete this file \n"
 		endif
 		" }}}2
@@ -65,7 +103,8 @@ function! SysIOAction(action)
 		let case=0
 
 		" sauvegarde du nom du fichier
-		let fileToAlter=substitute(expand("<cfile>"), "-", "", ""  )
+		" let l:fileToAlter=substitute(expand("<cfile>"), "-", "", ""  )
+		let l:fileToAlter=substitute(getline(line(".")), '[|`-]', '', "g"  )
 
 		mark a
 
@@ -86,7 +125,7 @@ function! SysIOAction(action)
 
 		mark a
 		norm Pcd
-		let pathOffileToAlter=getcwd()."/".middleDirectories
+		let l:pathOffileToAlter=getcwd()."/".middleDirectories
 		" End of Specific NERDTree buffer case }}}2
 "=============================================================================
 	else
@@ -95,8 +134,8 @@ function! SysIOAction(action)
 		" File Under cursor {{{2
 			let case=1
 			echo "file under cursor ".filereadable(getcwd()."/".expand("<cword>"))
-			let fileToAlter=expand("<cword>")
-			let pathOffileToAlter=getcwd()
+			let l:fileToAlter=expand("<cword>")
+			let l:pathOffileToAlter=getcwd()
 		" End of File Under cursor }}}2
 "=============================================================================
 		else
@@ -104,16 +143,16 @@ function! SysIOAction(action)
 			if filereadable(expand("<cWORD>:p"))!=0
 				let case=2
 				" FilePath under cursor {{{2
-				let fileToAlter=fnamemodify("".expand("<cWORD>"), ":p:t")
-				let pathOffileToAlter=fnamemodify("".expand("<cWORD>"), ":p:h")
+				let l:fileToAlter=fnamemodify("".expand("<cWORD>"), ":p:t")
+				let l:pathOffileToAlter=fnamemodify("".expand("<cWORD>"), ":p:h")
 				" End of FilePath under cursor }}}2
 			else
 				" Current Opened Buffer {{{2
 					if filereadable(expand("%:p"))!=0
 						let case=3
 						exe "cd ".expand("%:p:h")
-						let fileToAlter=expand("%:p:t")
-						let pathOffileToAlter=getcwd()
+						let l:fileToAlter=expand("%:p:t")
+						let l:pathOffileToAlter=getcwd()
 					else
 						" echo "none of file under cursor or opened under this buffer exist"
 					endif
@@ -124,39 +163,25 @@ function! SysIOAction(action)
 	endif
 "=============================================================================
 	" Ask user to alter the file to {{{2
-	let newFileName=inputdialog(actionTitle, fileToAlter)
-	if newFileName != ""
+	let l:newFileName=inputdialog(actionTitle, l:fileToAlter)
+	if l:newFileName != ""
 
+		" parA
+		call s:FeedCmdParA(a:action,l:pathOffileToAlter."/".l:fileToAlter)
+
+		" parB
 		if has("win32")
-			if a:action=="REN"
-				let cmdarg=pathOffileToAlter."/".fileToAlter."@@@@".newFileName
-			endif
-			if a:action=="DEL"
-				let cmdarg=pathOffileToAlter."/".fileToAlter
-			endif
-			let cmdarg=substitute(cmdarg,'\/', '\\', "g") 
-			let cmdarg=substitute(cmdarg,'\\\\', '\\', "g") 
-			let cmdarg=winCmd.cmdarg
+			call s:FeedCmdParB(a:action,l:newFileName)
 		else
-			if a:action=="REN"
-				let cmdarg=pathOffileToAlter."/".fileToAlter."@@@@".pathOffileToAlter."/".newFileName
-			endif
-			if a:action=="DEL"
-				let cmdarg=pathOffileToAlter."/".fileToAlter
-			endif
-			let cmdarg=substitute(cmdarg,'\\', '\/', "g") 
-			let cmdarg=substitute(cmdarg,'\/\/', '\/', "g") 
-			let cmdarg=unixCmd.cmdarg
+			call s:FeedCmdParB(a:action,l:pathOffileToAlter."/".l:newFileName)
 		endif
 
-		let cmdarg=substitute(cmdarg,'\s', '', "g") 
-		let cmdarg=substitute(cmdarg,'@@@@', ' ', "g") 
-		echo cmdarg
-		call system(cmdarg)
+		let g:toto=s:BuildCmd(a:action)
+		call system(s:BuildCmd(a:action))
 
 		if case==0
 			norm 'a
-			norm pR
+			silent norm pR
 		endif
 
 	endif
@@ -165,6 +190,51 @@ function! SysIOAction(action)
 endfunction 
 "}}}1
 "=============================================================================
-command! -nargs=0 -complete=file REN call SysIOAction("REN")  
-command! -nargs=0 -complete=file DEL call SysIOAction("DEL")  
+" Function to feed param if needed {{{1
+function! s:FeedCmdParA(action,arg)
+    if s:cmdDic[a:action].parA=="tofeed"
+    	let s:cmdDic[a:action].parA=s:SubSomeChars(a:arg)
+	endif
+endfunc
+function! s:FeedCmdParB(action,arg)
+    if s:cmdDic[a:action].parB=="tofeed"
+		" echo s:cmdDic[a:action]
+    	let s:cmdDic[a:action].parB=s:SubSomeChars(a:arg)
+	endif
+endfunc
+"}}}1
+"=============================================================================
+" Function to sub some non wanted characters {{{1
+function! s:SubSomeChars(var)
+	let l:tmp=a:var
+    for item in s:patList 
+	   let l:tmp=substitute(l:tmp, ''.item[0], ''.item[1], "g") 
+    endfor             
+	return l:tmp
+endfunc
+"}}}1
+"=============================================================================
+" Function that build the command to launch {{{1
+function! s:BuildCmd(action)
+   let l:cmd=s:cmdDic[a:action].cmd
+   let l:cmd.=' '
+   let l:cmd.=s:AddQuoteOnMSWin()
+   let l:cmd.=s:cmdDic[a:action].parA
+   let l:cmd.=s:AddQuoteOnMSWin()
+   let l:cmd.=' '
+   let l:cmd.=s:cmdDic[a:action].parB
+   return l:cmd
+endfunc
+"}}}1
+"=============================================================================
+" Function that add quote on commands specific for windows {{{1
+function! s:AddQuoteOnMSWin()
+   if has("win32")
+   	return '"'
+   endif
+endfunc
+"}}}1
+"=============================================================================
+command! -nargs=0 -complete=file REN call s:SysIOAction("REN")  
+command! -nargs=0 -complete=file DEL call s:SysIOAction("DEL")  
 " vim: set ft=vim ff=unix fdm=marker ts=4 :expandtab:
