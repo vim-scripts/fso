@@ -27,6 +27,8 @@
 "             Add Delete feature
 " version 1.3 Add Dictionaries to store commands
 "             Enable delete files in NERDTree that have spaces inside filename
+" version 1.4 Fix bug with whitespace into NERDTree
+"             Extend features to include files as webdeveloppers files (html,css,xhtml))
 " 
 " Last date revision : 20/04/2011
 "
@@ -34,12 +36,12 @@
 "=============================================================================
 " Dictionaries of commands depending on OS {{{1
 "
-let s:dwin    = { 'REN': {'cmd': 'rename', 'parA':'tofeed', 'parB':'tofeed'}, 
-			    \ 'DEL': {'cmd': 'del /F', 'parA':'tofeed', 'parB':''} 
+let s:dwin    = { 'REN': {'cmd': 'rename(', 'parA':'tofeed', 'parB':'tofeed'}, 
+			    \ 'DEL': {'cmd': 'delete(', 'parA':'tofeed', 'parB':''} 
 				\ }
 
-let s:dunix   = { 'REN': {'cmd': 'mv -f' , 'parA':'tofeed', 'parB':'tofeed'}, 
-                \ 'DEL': {'cmd': 'rm -rf', 'parA':'tofeed', 'parB':''}
+let s:dunix   = { 'REN': {'cmd': 'rename(', 'parA':'tofeed', 'parB':'tofeed'}, 
+                \ 'DEL': {'cmd': 'delete(', 'parA':'tofeed', 'parB':''}
 				\ }
 
 
@@ -70,21 +72,15 @@ function! s:InitDicts()
 endfunc
 " }}}1
 "=============================================================================
-" Function to rename file under cursor (in NERDTree)  {{{1
+" Function to detect file under cursor (in NERDTree)  {{{1
 function! s:SysIOAction(action)
 
     call s:InitDicts() 
 
-	let l:fileToAlter=""
-	let l:pathOffileToAlter=""
+	let l:memoCurrentDir=getcwd()
 
-	" 
-	" Order of checkup to rename
-	"
-	" 0 NerdTree, 
-	" 1 filename under cursor in current directory
-	" 2 filepath under cursor
-	" 3 filename of opened buffer
+	let l:fileToAlter=""
+
 "=============================================================================
 		" Assign command  {{{2
 		"
@@ -95,71 +91,43 @@ function! s:SysIOAction(action)
 		endif
 		" }}}2
 "=============================================================================
-	let case=-1
-
 	if  stridx(bufname("%"),"NERD")>-1
+		let g:case=0
 "=============================================================================
 		" Specific NERDTree buffer case {{{2
-		let case=0
 
 		" sauvegarde du nom du fichier
-		" let l:fileToAlter=substitute(expand("<cfile>"), "-", "", ""  )
-		let l:fileToAlter=substitute(getline(line(".")), '[|`-]', '', "g"  )
+		let l:fileToAlter=substitute(getline(line(".")), '^\(|\s*`*\)\+-', '', ""  )
+		let l:fileToAlter=substitute(l:fileToAlter, '\/$', '', ""  )
 
 		mark a
 
-		" recherche du repertoire racine
-		norm P
-		let lgRepertoireRacine=line(".")
-
-		" parcours des repertoires intermediaires
-		norm 'a
-		let middleDirectories=""
-		while  line(".")>lgRepertoireRacine
-			norm p
-			if  line(".")>lgRepertoireRacine
-				let middleDirectories="/".substitute(getline(line(".")),"[|~]", "", "g").middleDirectories
-				let middleDirectories=substitute(middleDirectories,'\s', '', "g") 
-			endif
-		endwhile
-
-		mark a
-		norm Pcd
-		let l:pathOffileToAlter=getcwd()."/".middleDirectories
+		norm pcd
 		" End of Specific NERDTree buffer case }}}2
 "=============================================================================
-	else
-		if filereadable(getcwd()."/".expand("<cword>"))!=0
+	elseif filereadable(expand("<cfile>"))!=0
+		let g:case=1
 "=============================================================================
-		" File Under cursor {{{2
-			let case=1
-			echo "file under cursor ".filereadable(getcwd()."/".expand("<cword>"))
-			let l:fileToAlter=expand("<cword>")
-			let l:pathOffileToAlter=getcwd()
+		" File Under cursor {{{2                  
+		let g:integralDir=expand("<cfile>")
+		exe "cd ".fnamemodify(g:integralDir, ":p:h")
+		let l:fileToAlter=fnamemodify(g:integralDir, ":p:t")
 		" End of File Under cursor }}}2
 "=============================================================================
-		else
-"=============================================================================
-			if filereadable(expand("<cWORD>:p"))!=0
-				let case=2
-				" FilePath under cursor {{{2
-				let l:fileToAlter=fnamemodify("".expand("<cWORD>"), ":p:t")
-				let l:pathOffileToAlter=fnamemodify("".expand("<cWORD>"), ":p:h")
-				" End of FilePath under cursor }}}2
-			else
-				" Current Opened Buffer {{{2
-					if filereadable(expand("%:p"))!=0
-						let case=3
-						exe "cd ".expand("%:p:h")
-						let l:fileToAlter=expand("%:p:t")
-						let l:pathOffileToAlter=getcwd()
-					else
-						" echo "none of file under cursor or opened under this buffer exist"
-					endif
-			endif
+	elseif filereadable(expand("%:p:h")."/".expand("<cfile>"))!=0
+
+		let g:case=2
+		let g:integralDir=expand("%:p:h")."/".expand("<cfile>:h")
+		exe "cd ".g:integralDir
+		let l:fileToAlter=expand("<cfile>:t")
+
+	elseif filereadable(expand("%:p"))!=0
+		let g:case=3
+		" Current Opened Buffer {{{2
+		exe "cd ".expand("%:p:h")
+		let l:fileToAlter=expand("%:p:t")
 		" End of Current Opened Buffer }}}2
 "=============================================================================
-		endif
 	endif
 "=============================================================================
 	" Ask user to alter the file to {{{2
@@ -167,26 +135,24 @@ function! s:SysIOAction(action)
 	if l:newFileName != ""
 
 		" parA
-		call s:FeedCmdParA(a:action,l:pathOffileToAlter."/".l:fileToAlter)
-
+		call s:FeedCmdParA(a:action,l:fileToAlter)
 		" parB
-		if has("win32")
-			call s:FeedCmdParB(a:action,l:newFileName)
-		else
-			call s:FeedCmdParB(a:action,l:pathOffileToAlter."/".l:newFileName)
-		endif
+		call s:FeedCmdParB(a:action,l:newFileName)
 
-		let g:toto=s:BuildCmd(a:action)
-		call system(s:BuildCmd(a:action))
+		let g:cmdtest=s:BuildCmd(a:action)
+		exe "call ".s:BuildCmd(a:action)
 
-		if case==0
+		if stridx(bufname("%"),"NERD")>-1
 			norm 'a
-			silent norm pR
+			silent norm Kkrj
 		endif
 
 	endif
 	" End of Asking user to rename the file to }}}2
 "=============================================================================
+
+ 
+	exe "cd ".l:memoCurrentDir
 endfunction 
 "}}}1
 "=============================================================================
@@ -199,7 +165,10 @@ endfunc
 function! s:FeedCmdParB(action,arg)
     if s:cmdDic[a:action].parB=="tofeed"
 		" echo s:cmdDic[a:action]
-    	let s:cmdDic[a:action].parB=s:SubSomeChars(a:arg)
+    	let s:cmdDic[a:action].parB=','
+    	let s:cmdDic[a:action].parB.=s:AddQuoteOnMSWin()
+    	let s:cmdDic[a:action].parB.=s:SubSomeChars(a:arg)
+    	let s:cmdDic[a:action].parB.=s:AddQuoteOnMSWin()
 	endif
 endfunc
 "}}}1
@@ -217,12 +186,11 @@ endfunc
 " Function that build the command to launch {{{1
 function! s:BuildCmd(action)
    let l:cmd=s:cmdDic[a:action].cmd
-   let l:cmd.=' '
    let l:cmd.=s:AddQuoteOnMSWin()
    let l:cmd.=s:cmdDic[a:action].parA
    let l:cmd.=s:AddQuoteOnMSWin()
-   let l:cmd.=' '
    let l:cmd.=s:cmdDic[a:action].parB
+   let l:cmd.=')'
    return l:cmd
 endfunc
 "}}}1

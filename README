@@ -7,10 +7,9 @@ o Usage
 
 	Just type :REN or :DEL to rename or delete file under cursor       
 
-
 o Filenames/Filepaths recognition
 
-  0.	Check that filename under cursor exists and is in an opened NERDTree buffer
-  1.	Check that filename under cursor is in the current directory
-  2.	Check that the filepath under cursor exists
-  3.	Check that file opened in the current buffer exists
+  1.Check that filename under cursor exists and is in an opened NERDTree buffer
+  2.Check that filename under cursor is readable
+  3.Check that path of opend buffer concated with filepath under cursor is readable
+  4.Check the current opened buffer exists and ask user to modify it.
