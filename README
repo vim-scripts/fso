@@ -5,7 +5,14 @@ over its filename/filepath.
 
 o Usage
 
-	Just type :REN or :DEL to rename or delete file under cursor       
+	Just type 
+           :REN to rename  file under cursor       
+           :DEL to delete file under cursor       
+           :INF to display informations of file under cursor       
+           :BROZ to browse filepath of file under cursor       
+
+           :LSD to access to those features from popupmenu
+
 
 o Filenames/Filepaths recognition
 
