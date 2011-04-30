@@ -1,7 +1,6 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=3555
 
-Enable vim user to rename (or delete) file when cursor pass 
-over its filename/filepath.
+Enable vim user to do some operating action on file on which cursor is passing over
 
 o Usage
 

@@ -1,8 +1,4 @@
 " File System Operations on file under cursor
-" Renaming
-" Deletion
-" Informations
-" Browse filepath
 "=============================================================================
 " Informations : Author and more (press za to open this under Vim)  {{{1
 "
@@ -54,11 +50,11 @@ let s:lpatunix  = [ ['\\','\/'], ['\/\/','\/'] ]
 function! s:InitDicts()
 
 	let g:cmdDic  = {
-	\ 'REN'     : {'maincall': 'call '   , 'cmd': ['rename']  												, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':'tofeed', 'actionQuestion':'Rename this file to'         , 'needBracket':'yes'}, 
-	\ 'DEL'     : {'maincall': 'call '   , 'cmd': ['delete']  												, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':''      , 'actionQuestion':'Delete this file'            , 'needBracket':'yes'},
-	\ 'BROZ'    : {'maincall': 'system ' , 'cmd': ['explorer.exe /select,']									, 'parA':'tofeed', 'needparAFileOrPath':'b', 'parB':''      , 'actionQuestion':'Open directory of this file' , 'needBracket':'no' },
-	\ 'INFOS'   : {'maincall': 'echo '   , 'cmd': ['getftype','getfperm','strftime("%Y %b %d %X",getftime']	, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':''      , 'actionQuestion':'Get permissions of this file', 'needBracket':'yes'}
-	\}
+				\ 'REN'     : {'maincall': 'call '   , 'cmd': ['rename']  												, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':'tofeed', 'actionQuestion':'Rename this file to'         , 'needBracket':'yes'}, 
+				\ 'DEL'     : {'maincall': 'call '   , 'cmd': ['delete']  												, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':''      , 'actionQuestion':'Delete this file'            , 'needBracket':'yes'},
+				\ 'BROZ'    : {'maincall': 'system ' , 'cmd': ['explorer.exe /select,']									, 'parA':'tofeed', 'needparAFileOrPath':'b', 'parB':''      , 'actionQuestion':'Open directory of this file' , 'needBracket':'no' },
+				\ 'INFOS'   : {'maincall': 'echo '   , 'cmd': ['getftype','getfperm','strftime("%Y %b %d %X",getftime']	, 'parA':'tofeed', 'needparAFileOrPath':'f', 'parB':''      , 'actionQuestion':'Get permissions of this file', 'needBracket':'yes'}
+				\}
 
 	if !empty(g:cmdDic)
 		echo "dict not empty"
@@ -163,8 +159,8 @@ function! <SID>:SysIOAction(action)
 
 		endif
 	elseif g:cmdDic[a:action].maincall=="system "
-			call system("".l:cmdtest)
-			echo 'call system("'.l:cmdtest.'")'
+		call system("".l:cmdtest)
+		echo 'call system("'.l:cmdtest.'")'
 	else
 		" just show
 		exe l:cmdtest
@@ -316,7 +312,180 @@ function! <SID>:DisplayListing()
 endfunc
 "}}}1
 "=============================================================================
-"standalone cmd
+"Generate the help documentation of this script {{{1
+fun! <SID>:GenerateHelpFile( nameOfDestFile )
+
+	let helpcontent=[]
+
+	call add(helpcontent, "*fsohelp.txt*  File System Operations For Vim version 7.0            Last change:  01 May 2011")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "PERSONAL COLOUR SWITCHER                                *fsohlp* ")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "Author:  Niva Niva.  <nivaemail at gmail dot com>")
+	call add(helpcontent, "")
+	call add(helpcontent, "Need unix vimuser to add file manager feature under unix. Email me please.")
+	call add(helpcontent, "")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "CONTENTS                                                 *fso* *fso-contents*")
+	call add(helpcontent, "")
+	call add(helpcontent, "	1. Contents.....................|fso-contents|")
+	call add(helpcontent, "	2. Fso Features Overview........|fso-overview|")
+	call add(helpcontent, "	3. Fso Installation.............|fso-installation|")
+	call add(helpcontent, "	4. Fso Usage....................|fso-usage|")
+	call add(helpcontent, "	5. Fso Versions.................|fso-versions|")
+	call add(helpcontent, "")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "FSO FEATURES OVERVIEW                           *fso-features* *fso-overview*")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Main Feature ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	. Enable vim user to do some operating action on file on which cursor")
+	call add(helpcontent, "	  is passing over.")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Features ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	. renaming")
+	call add(helpcontent, "	. deleting")
+	call add(helpcontent, "	. browsing filepath with system files'explorer")
+	call add(helpcontent, "	. showing permissions and others informations")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "                                ->> GO BACK to Contents Menu ->> |fso-contents|")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "FSO INSTALLATION                                          *fso-installation*")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Under Windows ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Copy this vimswcript to %homepath%/vimfiles/plugin")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Under Unix ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Copy this vimswcript to ~/vimfiles/plugin")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Optional Help File ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Just type the command FSOHLP and hit enter.")
+	call add(helpcontent, ">")
+	call add(helpcontent, "		:FSOHLP")
+	call add(helpcontent, "<")
+	call add(helpcontent, "	This will generate the help file in $home/vimfile/doc and call helptags for you.")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Then you can access to this help by typing:")
+	call add(helpcontent, ">")
+	call add(helpcontent, "		:h fso")
+	call add(helpcontent, "<")
+	call add(helpcontent, "")
+	call add(helpcontent, "                                ->> GO BACK to Contents Menu ->> |fso-contents|")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "FSO USAGE                                                       *fso-usage*")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Simpliest main action to do  ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	1. Just pass your cursor over a filename.")
+	call add(helpcontent, "	2. Type an FSO command or enter FSo popup menu.")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Available Commands (type :THECMD and hit ENTER)  ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o REN")
+	call add(helpcontent, ">")
+	call add(helpcontent, "	>> Show an input dialog to let your enter the new filename of the")
+	call add(helpcontent, "	   file.")
+	call add(helpcontent, "<")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o DEL")
+	call add(helpcontent, ">")
+	call add(helpcontent, "	>> Show a confirm dialog box to let your decide to delete the file.")
+	call add(helpcontent, "<           ")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o BROZ")
+	call add(helpcontent, ">")
+	call add(helpcontent, "	>> Open windows explorer to the directory that contains the file under")
+	call add(helpcontent, "	   cursor.")
+	call add(helpcontent, "<           ")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o INFOS or INFO or INF")
+	call add(helpcontent, ">")
+	call add(helpcontent, "	>> Echo the permissions, type, size and last modification date of the")
+	call add(helpcontent, "	   file.")
+	call add(helpcontent, "<           ")
+	call add(helpcontent, "           ")
+	call add(helpcontent, "	Popup Menu Command ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o LSD")
+	call add(helpcontent, ">")
+	call add(helpcontent, "	>> Show all available commands in a popup menu.")
+	call add(helpcontent, "	   Just select with arrow keys or Ctrl-N Ctrl-P and hit Enter.")
+	call add(helpcontent, "<")
+	call add(helpcontent, "")
+	call add(helpcontent, "                                ->> GO BACK to Contents Menu ->> |fso-contents|")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "FSO VERSIONS                                                   *fso-versions*")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.6 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Add the vimscript documentation")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.5 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Add Menu Feature and opening filepath in windows browser")
+	call add(helpcontent, "	o Change the name of the script because of all features coming...")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.4 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Fix bug with whitespace into NERDTree")
+	call add(helpcontent, "        o Extend features to include files as webdeveloppers files ")
+	call add(helpcontent, "	(html,css,xhtml))")
+	call add(helpcontent, "    	o Add Delete feature")
+	call add(helpcontent, "")
+    call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.3 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Add Dictionaries to store commands")
+	call add(helpcontent, "        o Enable delete files in NERDTree that have spaces inside filename")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.2 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Add new Rename feature when cursor is over filepath")
+	call add(helpcontent, "        o Add Delete feature")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.1 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Add Compatibility win32 and unix OS")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.0 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Initial upload")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "                                ->> GO BACK to Contents Menu ->> |fso-contents|")
+	call add(helpcontent, "==============================================================================")
+	call add(helpcontent, "")
+	call add(helpcontent, "vim:tw=78:ts=8:noet:ft=help:fo+=t:norl:noet:")
+
+    " write all content to the help file
+    call writefile(helpcontent, expand("$home")."/vimfiles/doc/".a:nameOfDestFile , "b")
+
+	exe "helptags ".expand("$home")."/vimfiles/doc"
+
+endfunction
+"}}}1
+"=============================================================================
+"Standalone cmd {{{1
 "RENAME
 command! -nargs=0 -complete=file REN call <SID>:SysIOAction("REN")  
 "DELETE
@@ -327,8 +496,18 @@ command! -nargs=0 -complete=file BROZ call <SID>:SysIOAction("BROZ")
 command! -nargs=0 -complete=file INFOS call <SID>:SysIOAction("INFOS")  
 command! -nargs=0 -complete=file INFO call <SID>:SysIOAction("INFOS")  
 command! -nargs=0 -complete=file INF call <SID>:SysIOAction("INFOS")  
-"cmd menu
+"}}}1
+"=============================================================================
+"Menu cmd {{{1
 command! -nargs=0 -complete=file LSD call <SID>:DisplayListing()  
-" autosource when saving this file
+"}}}1
+"=============================================================================
+"Help file cmd {{{1
+command! -nargs=0 -complete=file FSOHLP call <SID>:GenerateHelpFile("fsohelp.txt")
+"}}}1
+"=============================================================================
+"Autosource when saving this file {{{1
 autocmd bufwritepost ~/vimfiles/plugin/ren.vim source ~/vimfiles/plugin/ren.vim
+"}}}1
+
 " vim: set ft=vim ff=unix fdm=marker ts=4 :expandtab:
