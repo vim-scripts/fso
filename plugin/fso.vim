@@ -112,6 +112,7 @@ function! <SID>:SysIOAction(action)
 		"=============================================================================
 		" File Under cursor {{{2                  
 		let g:integralDir=expand("<cfile>")
+		let g:fileToAlter=substitute(g:fileToAlter, '\(\/\|\*\)$', '', ""  )
 		exe "cd ".fnamemodify(g:integralDir, ":p:h")
 		let g:pathOfFileToAlter=fnamemodify(g:integralDir, ":p:h")
 		let g:fileToAlter=fnamemodify(g:integralDir, ":p:t")
@@ -180,7 +181,7 @@ function! s:FeedCmdParA(action,arg)
 		if g:cmdDic[a:action].needparAFileOrPath == "f"
 			let g:cmdDic[a:action].parA=s:SubSomeChars(a:arg)
 		elseif g:cmdDic[a:action].needparAFileOrPath == "b"
-			let g:cmdDic[a:action].parA=g:pathOfFileToAlter.s:AddGoodSlashForOS().s:SubSomeChars(a:arg)
+			let g:cmdDic[a:action].parA=s:SubSomeChars(g:pathOfFileToAlter).s:AddGoodSlashForOS().s:SubSomeChars(a:arg)
 		else
 			let g:cmdDic[a:action].parA=g:pathOfFileToAlter
 		endif
@@ -431,6 +432,11 @@ fun! <SID>:GenerateHelpFile( nameOfDestFile )
 	call add(helpcontent, "FSO VERSIONS                                                   *fso-versions*")
 	call add(helpcontent, "")
 	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "")
+	call add(helpcontent, "	Version 1.7 : ~")
+	call add(helpcontent, "")
+	call add(helpcontent, "	o Fix bug to BROZ command that can open directory in windows explorer of relative filepath on which cursor pass over")
 	call add(helpcontent, "")
 	call add(helpcontent, "")
 	call add(helpcontent, "	Version 1.6 : ~")
